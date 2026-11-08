@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum LeadSource {
+  DIRECTORY_SCRAPE
+  META_ADS
+  MANUAL
+  API
+}
+
+enum PipelineStage {
+  NEW_SCRAPE
+  LOCAL_FILTERED
+  READY_FOR_OUTREACH
+  CONTACTED
+  ENGAGED
+  REPLIED
+  QUALIFIED
+  DISQUALIFIED
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  LOCAL_MX_PASSED
+  VALID
+  INVALID
+  CATCH_ALL
+  SPAM_TRAP
+  ROLE_FILTERED
+}
+
+enum OutreachStatus {
+  DRAFT
+  QUEUED
+  SCHEDULED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  REPLIED
+  BOUNCED
+  CANCELLED
+  FAILED
+}
+
+enum ActorType {
+  HUMAN
+  AI_AGENT
+  SYSTEM_CODE
+}
+
+model Company {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  industry      String?
+  website       String?
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  timezone      String    @default("America/New_York")
+  source        LeadSource @default(DIRECTORY_SCRAPE)
+  aiResearchNotes String?
+  stage         PipelineStage @default(NEW_SCRAPE)
+  contacts      Contact[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Contact {
+  id                   String           @id @default(uuid()) @db.Uuid
+  companyId            String           @db.Uuid
+  firstName            String?
+  lastName             String?
+  role                 String?
+  email                String           @unique
+  phone                String?
+  verificationStatus   VerificationStatus @default(UNVERIFIED)
+  verificationSubStatus String?
+  mxRecordsFound       Boolean          @default(false)
+  verifiedAt           DateTime?
+  isSuppressed         Boolean          @default(false)
+  aiPersonalizationHook String?
+  company              Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  outreachMessages     OutreachMessage[]
+  inboxReplies         InboxReply[]
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+model OutreachMessage {
+  id                String   @id @default(uuid()) @db.Uuid
+  contactId         String   @db.Uuid
+  sequenceStep      Int      @default(1)
+  subject           String
+  bodyHtml          String
+  bodyText          String
+  status            OutreachStatus @default(DRAFT)
+  scheduledAt       DateTime?
+  sentAt            DateTime?
+  resendMessageId   String?  @unique
+  internetMessageId String?
+  parentMessageId   String?
+  errorMessage      String?
+  contact           Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([contactId, sequenceStep])
+}
+
+model InboxReply {
+  id        String   @id @default(uuid()) @db.Uuid
+  contactId String   @db.Uuid
+  fromEmail String
+  subject   String
+  bodyText  String
+  receivedAt DateTime @default(now())
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  actor     ActorType
+  entityType String
+  entityId  String
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model SystemConfig {
+  id                String   @id @default("default")
+  dailySendLimit    Int      @default(50)
+  emailsSentToday   Int      @default(0)
+  lastQuotaResetDate String  @default("1970-01-01")
+  senderName        String   @default("Founder")
+  senderEmail       String   @default("outreach@yourdomain.com")
+  zeroBounceApiKey  String?
+  resendApiKey      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

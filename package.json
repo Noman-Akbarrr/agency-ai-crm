@@ -16,6 +16,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@number-flow/react": "^0.6.2",
     "@phosphor-icons/react": "^2.1.10",
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@tanstack/react-table": "^9.3.1",
     "class-variance-authority": "^0.7.1",
@@ -43,8 +44,12 @@
     "eslint-config-next": "16.4.4",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "prisma": "^8.0.0-rc.33",
+    "prisma": "^7.10.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true
   }
 }
