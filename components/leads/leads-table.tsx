@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Checkbox } from "@/components/ui/checkbox"
 import { MoreHorizontal, Mail } from "lucide-react"
-import { prisma } from "@/lib/prisma"
 import { BadgeStatus } from "@/components/leads/badge-status"
 
 export interface LeadRow {
@@ -36,7 +35,7 @@ export interface LeadRow {
   mxRecordsFound: boolean
   isSuppressed: boolean
   stage: string
-  createdAt: Date
+  createdAt: string
 }
 
 export function LeadsTable({
@@ -59,31 +58,25 @@ export function LeadsTable({
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const contacts = await prisma.contact.findMany({
-        where: filter as any,
-        include: { company: true },
-        orderBy: { createdAt: "desc" },
-        take: 100,
-      })
-      if (!cancelled) {
-        setData(
-          contacts.map((c) => ({
-            id: c.id,
-            email: c.email,
-            firstName: c.firstName,
-            lastName: c.lastName,
-            role: c.role,
-            companyName: c.company.name,
-            industry: c.company.industry ?? null,
-            state: c.company.state ?? null,
-            verificationStatus: c.verificationStatus,
-            mxRecordsFound: c.mxRecordsFound,
-            isSuppressed: c.isSuppressed,
-            stage: c.company.stage,
-            createdAt: c.createdAt,
-          }))
-        )
-        setLoading(false)
+      try {
+        const queryParams = new URLSearchParams()
+        if (filter.verificationStatus) {
+          queryParams.set("verificationStatus", filter.verificationStatus as string)
+        }
+        if (filter.isSuppressed !== undefined) {
+          queryParams.set("isSuppressed", String(filter.isSuppressed))
+        }
+        const res = await fetch(`/api/leads?${queryParams.toString()}`, {
+          headers: { "Content-Type": "application/json" },
+        })
+        const result = await res.json()
+        if (!cancelled && result.success) {
+          setData(result.data)
+        }
+      } catch (err) {
+        console.error("Failed to load leads:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
     load()
