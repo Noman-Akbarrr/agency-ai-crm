@@ -109,7 +109,7 @@ export function ApiKeysSection() {
           <p className="text-[10px] text-muted-foreground">
             Used for Stage-2 email verification (human-triggered only)
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               type={showZeroBounce ? "text" : "password"}
               value={zeroBounceValue}
@@ -144,7 +144,7 @@ export function ApiKeysSection() {
           <p className="text-[10px] text-muted-foreground">
             Used for sending outreach emails
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               type={showResend ? "text" : "password"}
               value={resendValue}
@@ -179,7 +179,7 @@ export function ApiKeysSection() {
           <p className="text-[10px] text-muted-foreground">
             Protects /api/agent/* endpoints for MCP integration
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               type="password"
               defaultValue={keys.agentApiKey ?? ""}

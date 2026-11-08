@@ -111,7 +111,7 @@ export function DraftApproval() {
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden flex flex-col">
         <div className="flex flex-col h-full">
-          <div className="flex-1 overflow-y-auto border-r border-border/60 p-3">
+          <div className="flex-1 overflow-y-auto lg:border-r border-border/60 p-3">
             {drafts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center text-xs text-muted-foreground">
                 No drafts pending approval.

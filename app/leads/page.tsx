@@ -11,16 +11,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 
 const TABS = [
   { value: "all", label: "All" },
-  { value: "local_mx_passed", label: "Passed Local MX (Verify Next)" },
-  { value: "verified_ready", label: "Verified & Ready" },
+  { value: "local_mx_passed", label: "MX Passed" },
+  { value: "verified_ready", label: "Verified" },
   { value: "suppressed", label: "Suppressed" },
 ] as const
 
@@ -48,20 +46,18 @@ export default function LeadsPage() {
   })()
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <div className="flex h-full flex-col">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-border/60 bg-background/50 backdrop-blur flex-shrink-0 z-10">
-        <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-foreground">Leads</h2>
-          <Separator orientation="vertical" className="h-4" />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 border-b border-border/60 bg-background flex-shrink-0">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <h2 className="font-semibold text-foreground shrink-0">Leads</h2>
           <Tabs
             value={selectedTab}
             onValueChange={handleTabChange}
-            className="w-full max-w-md"
           >
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="h-8">
               {TABS.map((tab) => (
-                <TabsTrigger key={tab.value} value={tab.value}>
+                <TabsTrigger key={tab.value} value={tab.value} className="text-xs px-2 sm:px-3">
                   {tab.label}
                 </TabsTrigger>
               ))}
@@ -69,25 +65,31 @@ export default function LeadsPage() {
           </Tabs>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:ml-auto">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm">
-                <Plus className="mr-2 h-4 w-4" /> Import CSV
+                <Plus className="mr-1 sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Import CSV</span>
+                <span className="sm:hidden">Import</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[420px]">
+            <SheetContent side="left" className="w-full sm:w-[420px]">
+              <SheetHeader>
+                <SheetTitle>Import CSV</SheetTitle>
+              </SheetHeader>
               <CsvImporter />
             </SheetContent>
           </Sheet>
           <Button onClick={() => setInspectorOpen(true)} size="sm">
-            Open Inspector
+            <span className="hidden sm:inline">Open Inspector</span>
+            <span className="sm:hidden">Inspector</span>
           </Button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-2 sm:p-4">
         <LeadsTable
           filter={statusFilter}
           onContactSelect={setInspectorContactId}

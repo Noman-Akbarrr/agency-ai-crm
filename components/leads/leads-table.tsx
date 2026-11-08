@@ -35,6 +35,7 @@ interface ColumnDef {
   accessorKey: string
   header: string
   sortable?: boolean
+  hideOnMobile?: boolean
 }
 
 export function LeadsTable({
@@ -88,10 +89,10 @@ export function LeadsTable({
   const columns: ColumnDef[] = [
     { accessorKey: "email", header: "Email", sortable: true },
     { accessorKey: "companyName", header: "Company", sortable: true },
-    { accessorKey: "role", header: "Role", sortable: true },
+    { accessorKey: "role", header: "Role", sortable: true, hideOnMobile: true },
     { accessorKey: "verificationStatus", header: "Verification", sortable: true },
-    { accessorKey: "stage", header: "Pipeline Stage", sortable: true },
-    { accessorKey: "state", header: "State", sortable: true },
+    { accessorKey: "stage", header: "Stage", sortable: true },
+    { accessorKey: "state", header: "State", sortable: true, hideOnMobile: true },
     { accessorKey: "actions", header: "Actions", sortable: false },
   ]
 
@@ -131,7 +132,7 @@ export function LeadsTable({
               {columns.map((col) => (
                 <th
                   key={col.accessorKey}
-                  className={`h-12 bg-background/50 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border/60 p-3 cursor-default ${col.sortable ? "cursor-pointer hover:bg-muted/30" : ""}`}
+                  className={`h-10 sm:h-12 bg-background/50 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border/60 p-2 sm:p-3 cursor-default ${col.hideOnMobile ? "hidden md:table-cell" : ""} ${col.sortable ? "cursor-pointer hover:bg-muted/30" : ""}`}
                   onClick={() => col.sortable && handleSort(col.accessorKey)}
                 >
                   <div className="flex items-center gap-1">
@@ -152,32 +153,32 @@ export function LeadsTable({
                 key={row.id}
                 className="border-b border-border/60 hover:bg-muted/50 transition-colors group"
               >
-                <td className="p-3 text-sm text-foreground align-top">
+                <td className="p-2 sm:p-3 text-sm text-foreground align-top">
                   <div className="font-mono text-xs tabular-nums">{row.email}</div>
                 </td>
-                <td className="p-3 text-sm text-foreground align-top">
+                <td className="p-2 sm:p-3 text-sm text-foreground align-top">
                   <div className="text-xs font-medium">{row.companyName}</div>
                 </td>
-                <td className="p-3 text-sm text-foreground align-top">
+                <td className="p-2 sm:p-3 text-sm text-foreground align-top hidden md:table-cell">
                   <div className="text-xs">{row.role ?? "—"}</div>
                 </td>
-                <td className="p-3 text-sm text-foreground align-top">
+                <td className="p-2 sm:p-3 text-sm text-foreground align-top">
                   <BadgeStatus
                     status={row.verificationStatus}
                     isSuppressed={row.isSuppressed}
                   />
                 </td>
-                <td className="p-3 text-sm text-foreground align-top">
-                  <Badge variant="outline" className="text-xs font-mono tabular-nums">
+                <td className="p-2 sm:p-3 text-sm text-foreground align-top">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs font-mono tabular-nums">
                     {row.stage}
                   </Badge>
                 </td>
-                <td className="p-3 text-sm text-foreground align-top">
+                <td className="p-2 sm:p-3 text-sm text-foreground align-top hidden md:table-cell">
                   <div className="text-xs font-mono tabular-nums text-muted-foreground">
                     {row.state ?? "—"}
                   </div>
                 </td>
-                <td className="p-3 text-sm align-top">
+                <td className="p-2 sm:p-3 text-sm align-top">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-6 w-6">

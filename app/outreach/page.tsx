@@ -5,18 +5,18 @@ import { InboxReplies } from "@/components/outreach/inbox-replies"
 
 export default function OutreachPage() {
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
-      <div className="px-4 py-3 border-b border-border/60 bg-background/50 backdrop-blur flex-shrink-0 z-10">
-        <h1 className="font-semibold text-foreground">Outreach Command Center</h1>
+    <div className="flex h-full flex-col">
+      <div className="px-4 py-3 border-b border-border/60 bg-background flex-shrink-0">
+        <h1 className="font-semibold text-foreground text-sm sm:text-base">Outreach Command Center</h1>
         <p className="text-xs text-muted-foreground">
           Monitor sends, approve AI drafts, and manage inbound replies.
         </p>
       </div>
 
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+      <div className="flex-1 overflow-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
         <OutreachCounters />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
           <ScheduledQueue />
           <DraftApproval />
         </div>
