@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma"
 import { KanbanBoard } from "@/components/pipeline/kanban-board"
 
 const PIPELINE_STAGES: Array<{

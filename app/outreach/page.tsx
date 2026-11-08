@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma"
 import { OutreachCounters } from "@/components/outreach/outreach-counters"
 import { ScheduledQueue } from "@/components/outreach/scheduled-queue"
 import { DraftApproval } from "@/components/outreach/draft-approval"
