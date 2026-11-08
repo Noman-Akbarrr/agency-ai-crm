@@ -4,10 +4,9 @@ import { Resend } from "resend"
 
 export const dynamic = "force-dynamic"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: NextRequest) {
   const prisma = await getPrisma()
+  const resend = new Resend(process.env.RESEND_API_KEY)
   // Auth: x-agent-api-key header
   const apiKey = request.headers.get("x-agent-api-key")
   if (!apiKey || apiKey !== process.env.AGENT_API_KEY) {
