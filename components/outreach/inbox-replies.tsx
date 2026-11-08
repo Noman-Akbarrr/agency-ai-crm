@@ -1,6 +1,5 @@
 "use client"
 
-import { prisma } from "@/lib/prisma"
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Clock, ArrowRight } from "lucide-react"
@@ -21,28 +20,18 @@ export function InboxReplies() {
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const items = await prisma.inboxReply.findMany({
-        include: {
-          contact: true,
-        },
-        orderBy: { receivedAt: "desc" },
-        take: 20,
-      })
-
-      if (!cancelled) {
-        setReplies(
-          items.map((r) => ({
-            id: r.id,
-            fromEmail: r.fromEmail,
-            subject: r.subject,
-            bodyText: r.bodyText,
-            receivedAt: r.receivedAt,
-            contactName: r.contact
-              ? `${r.contact.firstName ?? ""} ${r.contact.lastName ?? ""}`.trim() || null
-              : null,
-          }))
-        )
-        setLoading(false)
+      try {
+        const res = await fetch("/api/inbox-replies", {
+          headers: { "Content-Type": "application/json" },
+        })
+        const data = await res.json()
+        if (!cancelled && data.success) {
+          setReplies(data.data)
+        }
+      } catch (err) {
+        console.error("Failed to load replies:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
     load()

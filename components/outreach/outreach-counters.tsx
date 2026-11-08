@@ -1,6 +1,5 @@
 "use client"
 
-import { prisma } from "@/lib/prisma"
 import { useEffect, useState } from "react"
 import AnimateNumber from "@number-flow/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,31 +50,24 @@ export function OutreachCounters() {
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const today = new Date().toISOString().split("T")[0]
-      const messages = await prisma.outreachMessage.findMany({
-        where: {
-          createdAt: { gte: new Date(today) },
-        },
-      })
-
-      if (!cancelled) {
-        const statuses = [
-          "SENT",
-          "DELIVERED",
-          "OPENED",
-          "CLICKED",
-          "REPLIED",
-          "BOUNCED",
-        ] as const
-        setStats(
-          statuses.map((status) => ({
-            icon: ICONS[status],
-            label:
-              status === "SENT" ? "Sent Today" : status.charAt(0) + status.slice(1).toLowerCase(),
-            value: messages.filter((m) => m.status === status).length,
-            color: COLORS[status],
-          }))
-        )
+      try {
+        const res = await fetch("/api/outreach/stats", {
+          headers: { "Content-Type": "application/json" },
+        })
+        const data = await res.json()
+        if (!cancelled && data.success) {
+          const statMap = new Map<string, number>(data.data.map((s: { status: string; count: number }) => [s.status, s.count]))
+          setStats([
+            { icon: Send, label: "Sent Today", value: statMap.get("SENT") ?? 0, color: "text-blue-600" },
+            { icon: CheckCheck, label: "Delivered", value: statMap.get("DELIVERED") ?? 0, color: "text-green-600" },
+            { icon: Eye, label: "Opened", value: statMap.get("OPENED") ?? 0, color: "text-purple-600" },
+            { icon: Link, label: "Clicked", value: statMap.get("CLICKED") ?? 0, color: "text-indigo-600" },
+            { icon: Reply, label: "Replied", value: statMap.get("REPLIED") ?? 0, color: "text-emerald-600" },
+            { icon: Mail, label: "Bounced", value: statMap.get("BOUNCED") ?? 0, color: "text-red-600" },
+          ])
+        }
+      } catch (err) {
+        console.error("Failed to load stats:", err)
       }
     }
     load()

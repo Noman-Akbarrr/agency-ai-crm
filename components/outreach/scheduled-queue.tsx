@@ -1,6 +1,5 @@
 "use client"
 
-import { prisma } from "@/lib/prisma"
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Clock, Mail, Phone, User } from "lucide-react"
@@ -25,34 +24,30 @@ export function ScheduledQueue() {
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const items = await prisma.outreachMessage.findMany({
-        where: {
-          status: { in: ["QUEUED", "SCHEDULED"] },
-        },
-        include: {
-          contact: {
-            include: { company: true },
-          },
-        },
-        orderBy: { scheduledAt: "asc" },
-        take: 20,
-      })
-
-      if (!cancelled) {
-        setMessages(
-          items.map((m) => ({
-            id: m.id,
-            contactEmail: m.contact.email,
-            contactName: `${m.contact.firstName ?? ""} ${m.contact.lastName ?? ""}`.trim(),
-            companyName: m.contact.company.name,
-            subject: m.subject,
-            status: m.status,
-            scheduledAt: m.scheduledAt,
-            timezone: m.contact.company.timezone,
-            sequenceStep: m.sequenceStep,
-          }))
-        )
-        setLoading(false)
+      try {
+        const res = await fetch("/api/outreach/scheduled", {
+          headers: { "Content-Type": "application/json" },
+        })
+        const data = await res.json()
+        if (!cancelled && data.success) {
+          setMessages(
+            data.data.map((m: any) => ({
+              id: m.id,
+              contactEmail: m.contactEmail,
+              contactName: m.contactName,
+              companyName: m.companyName,
+              subject: m.subject,
+              status: m.status,
+              scheduledAt: m.scheduledAt,
+              timezone: m.timezone,
+              sequenceStep: m.sequenceStep,
+            }))
+          )
+        }
+      } catch (err) {
+        console.error("Failed to load scheduled queue:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
     load()

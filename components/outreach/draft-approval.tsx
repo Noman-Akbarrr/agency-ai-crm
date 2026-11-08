@@ -1,6 +1,5 @@
 "use client"
 
-import { prisma } from "@/lib/prisma"
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,35 +29,18 @@ export function DraftApproval() {
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const items = await prisma.outreachMessage.findMany({
-        where: {
-          status: "DRAFT",
-        },
-        include: {
-          contact: {
-            include: { company: true },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-        take: 10,
-      })
-
-      if (!cancelled) {
-        setDrafts(
-          items.map((m) => ({
-            id: m.id,
-            contactEmail: m.contact.email,
-            contactName: `${m.contact.firstName ?? ""} ${m.contact.lastName ?? ""}`.trim(),
-            companyName: m.contact.company.name,
-            subject: m.subject,
-            bodyHtml: m.bodyHtml,
-            bodyText: m.bodyText,
-            status: m.status,
-            sequenceStep: m.sequenceStep,
-            aiPersonalizationHook: m.contact.aiPersonalizationHook,
-          }))
-        )
-        setLoading(false)
+      try {
+        const res = await fetch("/api/outreach/drafts", {
+          headers: { "Content-Type": "application/json" },
+        })
+        const data = await res.json()
+        if (!cancelled && data.success) {
+          setDrafts(data.data)
+        }
+      } catch (err) {
+        console.error("Failed to load drafts:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
     load()
@@ -69,12 +51,17 @@ export function DraftApproval() {
 
   const handleApprove = async (id: string) => {
     try {
-      await prisma.outreachMessage.update({
-        where: { id },
-        data: { status: "QUEUED" },
+      const res = await fetch("/api/outreach/drafts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "QUEUED" }),
       })
-      setDrafts(drafts.filter((d) => d.id !== id))
-      if (selectedDraft?.id === id) setSelectedDraft(null)
+      if (res.ok) {
+        setDrafts(drafts.filter((d) => d.id !== id))
+        if (selectedDraft?.id === id) setSelectedDraft(null)
+      } else {
+        console.error("Failed to approve draft")
+      }
     } catch (err) {
       console.error("Failed to approve:", err)
     }
@@ -82,12 +69,17 @@ export function DraftApproval() {
 
   const handleReject = async (id: string) => {
     try {
-      await prisma.outreachMessage.update({
-        where: { id },
-        data: { status: "CANCELLED" },
+      const res = await fetch("/api/outreach/drafts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "CANCELLED" }),
       })
-      setDrafts(drafts.filter((d) => d.id !== id))
-      if (selectedDraft?.id === id) setSelectedDraft(null)
+      if (res.ok) {
+        setDrafts(drafts.filter((d) => d.id !== id))
+        if (selectedDraft?.id === id) setSelectedDraft(null)
+      } else {
+        console.error("Failed to reject draft")
+      }
     } catch (err) {
       console.error("Failed to reject:", err)
     }
