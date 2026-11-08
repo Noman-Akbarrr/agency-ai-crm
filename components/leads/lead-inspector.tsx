@@ -1,6 +1,5 @@
 "use client"
 
-import { prisma } from "@/lib/prisma"
 import { useEffect, useState } from "react"
 import {
   Sheet,
@@ -17,6 +16,45 @@ import { Textarea } from "@/components/ui/textarea"
 import { Mail, Phone, Edit2 } from "lucide-react"
 import { toast } from "sonner"
 
+interface ContactData {
+  id: string
+  firstName: string | null
+  lastName: string | null
+  email: string
+  phone: string | null
+  role: string | null
+  verificationStatus: string
+  mxRecordsFound: boolean
+  isSuppressed: boolean
+  aiPersonalizationHook: string | null
+  company: {
+    id: string
+    name: string
+    industry: string | null
+    state: string | null
+    stage: string
+    timezone: string
+  }
+  outreachMessages: Array<{
+    id: string
+    sequenceStep: number
+    subject: string
+    bodyHtml: string
+    bodyText: string
+    status: string
+    scheduledAt: string | null
+    sentAt: string | null
+    internetMessageId: string | null
+  }>
+  inboxReplies: Array<{
+    id: string
+    fromEmail: string
+    subject: string
+    bodyText: string
+    receivedAt: string
+  }>
+}
+
 export function LeadInspector({
   open,
   contactId,
@@ -26,7 +64,7 @@ export function LeadInspector({
   contactId: string | null
   onOpenChange: (open: boolean) => void
 }) {
-  const [contact, setContact] = useState<any>(null)
+  const [contact, setContact] = useState<ContactData | null>(null)
   const [company, setCompany] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [replies, setReplies] = useState<any[]>([])
@@ -35,36 +73,55 @@ export function LeadInspector({
   )
   const [aiHook, setAiHook] = useState("")
   const [saving, setSaving] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!contactId) return
+    let cancelled = false
     async function load() {
-      const c: any = await prisma.contact.findUnique({
-        where: { id: contactId as string },
-        include: { company: true, outreachMessages: true, inboxReplies: true },
-      })
-      if (c) {
-        setContact(c)
-        setCompany(c.company)
-        setMessages(c.outreachMessages)
-        setReplies(c.inboxReplies)
-        setAiHook(c.aiPersonalizationHook ?? "")
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/contacts/${contactId}`, {
+          headers: { "Content-Type": "application/json" },
+        })
+        const data = await res.json()
+        if (!cancelled && data.success) {
+          const c = data.data
+          setContact(c)
+          setCompany(c.company)
+          setMessages(c.outreachMessages)
+          setReplies(c.inboxReplies)
+          setAiHook(c.aiPersonalizationHook ?? "")
+        }
+      } catch (err) {
+        console.error("Failed to load contact:", err)
+        toast.error("Failed to load contact")
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
     load()
+    return () => {
+      cancelled = true
+    }
   }, [contactId])
 
   const handleSaveHook = async () => {
     if (!contact) return
     setSaving(true)
     try {
-      await prisma.contact.update({
-        where: { id: contact.id },
-        data: { aiPersonalizationHook: aiHook || null },
+      const res = await fetch(`/api/contacts/${contact.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ aiPersonalizationHook: aiHook || null }),
       })
-      toast.success("Personalization hook saved")
+      if (res.ok) {
+        toast.success("Personalization hook saved")
+      } else {
+        toast.error("Failed to save hook")
+      }
     } catch (err) {
-      toast.error("Failed to save")
+      toast.error("Failed to save hook")
     } finally {
       setSaving(false)
     }
@@ -93,11 +150,10 @@ export function LeadInspector({
         <Separator />
 
         <div className="flex h-[calc(100vh-5rem)] flex-col">
-          {/* Nav Tabs */}
           <div className="border-b border-border/60 bg-background/50 flex-shrink-0 z-10">
             <Tabs
-              value={activeTab as string}
-              onValueChange={(v: any) => setActiveTab(v)}
+              value={activeTab}
+              onValueChange={(v: string) => setActiveTab(v as "details" | "outreach" | "replies")}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-3">
@@ -108,7 +164,6 @@ export function LeadInspector({
             </Tabs>
           </div>
 
-          {/* Content */}
           <div className="flex-1 overflow-auto p-4">
             {activeTab === "details" && (
               <div className="space-y-4">
@@ -178,7 +233,6 @@ export function LeadInspector({
 
                 <Separator />
 
-                {/* AI Personalization Hook */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium text-muted-foreground">
@@ -230,8 +284,7 @@ export function LeadInspector({
                         </div>
                         {m.scheduledAt && (
                           <div className="mt-2 text-xs text-muted-foreground">
-                            Scheduled:{" "}
-                            {new Date(m.scheduledAt).toLocaleString()}
+                            Scheduled: {new Date(m.scheduledAt).toLocaleString()}
                           </div>
                         )}
                         {m.sentAt && (
