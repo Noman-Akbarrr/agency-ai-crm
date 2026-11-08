@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
@@ -7,6 +7,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const prisma = await getPrisma()
   try {
     const { id } = await params
     const contact = await prisma.contact.findUnique({
@@ -75,6 +76,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const prisma = await getPrisma()
   try {
     const { id } = await params
     const body = await request.json()
