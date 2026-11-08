@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
@@ -7,6 +7,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const prisma = await getPrisma()
   // Auth: x-agent-api-key header
   const apiKey = request.headers.get("x-agent-api-key")
   if (!apiKey || apiKey !== process.env.AGENT_API_KEY) {

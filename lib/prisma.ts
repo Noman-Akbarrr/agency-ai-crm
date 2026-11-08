@@ -5,7 +5,7 @@ import { PrismaPg } from "@prisma/adapter-pg"
 
 let prismaInstance: PrismaClient | null = null
 
-export function getPrisma(): PrismaClient {
+export async function getPrisma(): Promise<PrismaClient> {
   if (!prismaInstance) {
     prismaInstance = new PrismaClient({
       adapter: new PrismaPg({

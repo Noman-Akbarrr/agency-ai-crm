@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrisma } from "@/lib/prisma"
 import {
   runLocalHygiene,
   getTimezoneForState,
@@ -25,6 +25,7 @@ const importRowSchema = z.object({
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
+  const prisma = await getPrisma()
   try {
     const body = await request.json()
     const rows = Array.isArray(body) ? body : [body]

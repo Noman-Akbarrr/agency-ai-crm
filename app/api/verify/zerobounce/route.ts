@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrisma } from "@/lib/prisma"
 
 const zerobounceRequestSchema = z.object({
   contactIds: z.array(z.string()).min(1, "At least one contact ID required"),
@@ -10,6 +10,7 @@ import { z } from "zod"
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
+  const prisma = await getPrisma()
   try {
     const body = await request.json()
     const parsed = zerobounceRequestSchema.safeParse(body)

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrisma } from "@/lib/prisma"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
+  const prisma = await getPrisma()
   try {
     const config = await prisma.systemConfig.findUnique({
       where: { id: "default" },
@@ -33,6 +34,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  const prisma = await getPrisma()
   try {
     const body = await request.json()
     const { zeroBounceApiKey, resendApiKey } = body

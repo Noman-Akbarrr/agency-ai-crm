@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { getPrisma } from "@/lib/prisma"
 
 const OPTOUT_KEYWORDS = ["stop", "unsubscribe", "remove me", "opt out", "do not email"]
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
+  const prisma = await getPrisma()
   try {
     const body = await request.json()
     const { from, subject, text_body: textBody, message_id: messageId } = body
