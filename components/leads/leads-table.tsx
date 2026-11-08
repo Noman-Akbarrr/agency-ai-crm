@@ -3,7 +3,7 @@
 import {
   createCoreRowModel,
   createFilteredRowModel,
-  createPaginationRowModel,
+  createPaginatedRowModel,
   createSortedRowModel,
   useTable,
   type PaginationState,
@@ -185,13 +185,13 @@ export function LeadsTable({
     getCoreRowModel: createCoreRowModel(),
     getSortedRowModel: createSortedRowModel(),
     getFilteredRowModel: createFilteredRowModel(),
-    getPaginationRowModel: createPaginationRowModel(),
+    getPaginatedRowModel: createPaginatedRowModel(),
     state: { sorting, pagination },
     onSortingChange: setSorting as any,
     onPaginationChange: setPagination as any,
   } as any)
 
-  const pageRows = (table as any).getPaginationRowModel().rows
+  const pageRows = (table as any).getPaginatedRowModel().rows
 
   return (
     <div className="rounded-2xl border border-border/60 bg-background shadow-sm overflow-hidden">
