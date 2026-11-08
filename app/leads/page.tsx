@@ -1,3 +1,5 @@
+"use client"
+
 import { prisma } from "@/lib/prisma"
 import { LeadsTable } from "@/components/leads/leads-table"
 import { CsvImporter } from "@/components/leads/csv-importer"

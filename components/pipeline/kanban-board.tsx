@@ -1,6 +1,5 @@
 "use client"
 
-import { prisma } from "@/lib/prisma"
 import { useEffect, useState } from "react"
 import {
   DndContext,
@@ -18,6 +17,7 @@ import {
 import { CSS } from "@dnd-kit/utilities"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Mail } from "lucide-react"
 
 const STAGE_COLORS: Record<string, string> = {
   NEW_SCRAPE: "bg-muted",
@@ -36,16 +36,21 @@ interface LeadCard {
   lastName: string | null
   email: string
   companyName: string
+  companyId: string
   role: string | null
   stage: string
   verificationStatus: string
-  companyId: string
+}
+
+interface Stage {
+  id: string
+  label: string
 }
 
 export function KanbanBoard({
   stages,
 }: {
-  stages: Array<{ id: string; label: string }>
+  stages: Stage[]
 }) {
   const [columns, setColumns] = useState<
     Array<{ id: string; label: string; leads: LeadCard[] }>
@@ -55,30 +60,24 @@ export function KanbanBoard({
   useEffect(() => {
     let cancelled = false
     async function load() {
-      const contacts = await prisma.contact.findMany({
-        include: { company: true },
-        orderBy: { createdAt: "asc" },
-      })
-      if (!cancelled) {
-        const cols = stages.map((s) => ({
-          id: s.id,
-          label: s.label,
-          leads: contacts
-            .filter((c) => c.company.stage === s.id)
-            .map((c) => ({
-              id: c.id,
-              firstName: c.firstName,
-              lastName: c.lastName,
-              email: c.email,
-              companyName: c.company.name,
-              role: c.role,
-              stage: c.company.stage,
-              verificationStatus: c.verificationStatus,
-              companyId: c.companyId,
-            })),
-        }))
-        setColumns(cols)
-        setLoading(false)
+      try {
+        const res = await fetch("/api/leads", {
+          headers: { "Content-Type": "application/json" },
+        })
+        const data = await res.json()
+        if (!cancelled && data.success) {
+          const leads = data.data as LeadCard[]
+          const cols = stages.map((s) => ({
+            id: s.id,
+            label: s.label,
+            leads: leads.filter((l) => l.stage === s.id),
+          }))
+          setColumns(cols)
+        }
+      } catch (err) {
+        console.error("Failed to load leads:", err)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
     load()
@@ -112,7 +111,7 @@ export function KanbanBoard({
 
     if (!lead || !activeColumnId) return
 
-    // Find which column the lead is being dropped on (by matching over.id to a lead id in some column)
+    // Find which column the lead is being dropped on
     let targetColumnId: string | null = null
     for (const col of columns) {
       if (col.leads.some((l) => l.id === over.id)) {
@@ -123,7 +122,7 @@ export function KanbanBoard({
 
     if (!targetColumnId || targetColumnId === activeColumnId) return
 
-    // Update local state
+    // Update local state optimistically
     const newColumns = columns.map((c) => {
       if (c.id === activeColumnId) {
         return {
@@ -139,11 +138,12 @@ export function KanbanBoard({
 
     setColumns(newColumns)
 
-    // Update database: move the company (and all its contacts) to the new stage
+    // Update the company stage in the database via API
     try {
-      await prisma.company.update({
-        where: { id: lead.companyId },
-        data: { stage: targetColumnId as any },
+      await fetch(`/api/companies/${lead.companyId}/stage`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: targetColumnId }),
       })
     } catch (err) {
       console.error("Failed to update stage:", err)
