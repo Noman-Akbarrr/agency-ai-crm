@@ -204,7 +204,7 @@ export function LeadsTable({
                   <th
                     key={header.id}
                     className="h-12 bg-background/50 text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-border/60"
-                    {...header.getHeaderProps()}
+                    {...(header.getHeaderProps?.() ?? {})}
                   >
                     {header.isPlaceholder ? null : header.render()}
                   </th>
@@ -218,14 +218,14 @@ export function LeadsTable({
                 <tr
                   key={row.id}
                   className="border-b border-border/60 hover:bg-muted/50 transition-colors group"
-                  {...row.getRowProps()}
+                  {...(row.getRowProps?.() ?? {})}
                 >
                   {row.getVisibleCells().map((cell: any) => {
                     return (
                       <td
                         key={cell.id}
                         className="p-3 text-sm text-foreground align-top"
-                        {...cell.getCellProps()}
+                        {...(cell.getCellProps?.() ?? {})}
                       >
                         {cell.render()}
                       </td>
